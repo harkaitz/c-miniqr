@@ -13,13 +13,13 @@ static struct {
 
 bool miniqr_library_init (const char *_opts[]) {
     const char *path;
-    bool        res;
+    bool        e;
     if (g_miniqr.inited) return true;
     path = getenv("PATH");
-    res = pathsearch(path, PATH_SEP, "qrencode", &g_miniqr.qrencode_m);
-    if (!res/*err*/) goto cleanup;
-    res = pathsearch(path, PATH_SEP, "base64", &g_miniqr.base64_m);
-    if (!res/*err*/) goto cleanup;
+    e = pathsearch(path, PATH_SEP, "qrencode", &g_miniqr.qrencode_m);
+    if (!e/*err*/) goto cleanup;
+    e = pathsearch(path, PATH_SEP, "base64", &g_miniqr.base64_m);
+    if (!e/*err*/) goto cleanup;
     g_miniqr.inited = true;
     return true;
  cleanup:
@@ -36,7 +36,6 @@ void miniqr_library_deinit (void) {
 bool miniqr_create_v(miniqr **_m, int _o_fd, unsigned _flags, const char *_url_fmt, va_list va) {
 
     bool     retval     = false;
-    int      res        = 0;
     pid_t    pid1       = -1;
     pid_t    pid2       = -1;
     int      p1[2]      = {-1,-1};
@@ -44,30 +43,31 @@ bool miniqr_create_v(miniqr **_m, int _o_fd, unsigned _flags, const char *_url_f
     char    *url_m      = NULL;
     size_t   url_msz    = 0;
     miniqr  *m          = NULL;
-
+    int      e;
+    
     /* Forge URL. */
     url_fp = open_memstream(&url_m, &url_msz);
     if (!url_fp/*err*/) goto cleanup_errno;
-    res =
+    e =
         urlencode_post_fv(url_fp, true, _url_fmt, va)!=-1 &&
         fputc('\0', url_fp)!=EOF &&
         fflush(url_fp)!=EOF;
-    if (!res/*err*/) goto cleanup_errno;
+    if (!e/*err*/) goto cleanup_errno;
     
     /* When base64 is needed, create pipe. */
     bool use_base64 = (_flags & (MINIQR_WRAP_WITH_HTML|MINIQR_BASE64))?true:false;
     if (use_base64) {
-        res =
+        e =
             pipe(p1)!=-1 &&
             fcntl(p1[0], F_SETFD, FD_CLOEXEC)!=-1 &&
             fcntl(p1[1], F_SETFD, FD_CLOEXEC)!=-1;
-        if (!res/*err*/) goto cleanup_errno;
+        if (!e/*err*/) goto cleanup_errno;
     }
 
     /* Open html. */
     if (_flags & MINIQR_WRAP_WITH_HTML) {
-        res = dprintf(_o_fd, "<a href=\"%s\"><img src=\"data:image/png;base64,\n", url_m);
-        if (res<0/*err*/) goto cleanup_errno;
+        e = dprintf(_o_fd, "<a href=\"%s\"><img src=\"data:image/png;base64,\n", url_m);
+        if (e<0/*err*/) goto cleanup_errno;
         fsync(_o_fd);
     }
     
@@ -126,11 +126,11 @@ bool miniqr_create_v(miniqr **_m, int _o_fd, unsigned _flags, const char *_url_f
 }
 
 bool miniqr_create(miniqr **_m, int _o_fd, unsigned _flags, const char *_url_fmt, ...) {
-    va_list va;
+    va_list va; bool e;
     va_start(va, _url_fmt);
-    bool ret = miniqr_create_v(_m, _o_fd, _flags, _url_fmt, va);
+    e = miniqr_create_v(_m, _o_fd, _flags, _url_fmt, va);
     va_end(va);
-    return ret;
+    return e;
 }
 
 bool miniqr_wait(miniqr *_m, int _o_fd) {
