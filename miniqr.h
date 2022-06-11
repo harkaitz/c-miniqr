@@ -20,6 +20,9 @@ bool miniqr_create  (miniqr **_m, int _o_fd, unsigned _flags, const char *_url_f
 bool miniqr_wait    (miniqr  *_m, int _o_fd);
 void miniqr_destroy (miniqr  *_m);
 
+bool miniqr_printf_v(FILE *_fp, unsigned _flags, const char *_fmt, va_list va);
+bool miniqr_printf  (FILE *_fp, unsigned _flags, const char *_fmt, ...);
+
 #define MINIQR_WRAP_WITH_HTML 0x01
 #define MINIQR_BASE64         0x02
 
