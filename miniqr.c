@@ -1,7 +1,6 @@
 #include "miniqr.h"
 #include <sys/pathsearch.h>
 #include <io/fcopy.h>
-#include <io/slog.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <signal.h>
@@ -191,7 +190,7 @@ bool miniqr_printf_v(FILE *_fp, unsigned _flags, const char *_fmt, va_list va) {
     if (miniqr)   miniqr_destroy(miniqr);
     return retval;
     cleanup_errno:
-    error("%s", strerror(errno));
+    syslog(LOG_ERR, "%s", strerror(errno));
     goto cleanup;
 }
 
